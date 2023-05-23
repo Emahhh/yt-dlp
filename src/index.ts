@@ -35,37 +35,34 @@ async function executeCommand(command: string): Promise<void> {
         reject();
       }
 
-      // poll to see if the download is complete
-      function checkStatus() {
-        if (error) {
-          showToast({
-            style: Toast.Style.Failure,
-            title: "Execution Error:",
-            message: error.message,
-          });
-          reject();
-        }
-
-        if (stderr) {
-          showToast({
-            style: Toast.Style.Failure,
-            title: "yt-dlp Error:",
-            message: stderr,
-          });
-          reject();
-        }
-
-        if (stdout.includes("100%")) {
-          showToast({
-            style: Toast.Style.Success,
-            title: "Download Complete!",
-            message: "The video is in your Downloads folder.",
-          });
-          resolve();
-        }
+      if (error) {
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Execution Error:",
+          message: error.message,
+        });
+        reject();
       }
 
-      const intervalId = setInterval(checkStatus, 1000);
+      if (stderr) {
+        showToast({
+          style: Toast.Style.Failure,
+          title: "yt-dlp Error:",
+          message: stderr,
+        });
+        console.error(stderr);
+        reject();
+      }
+
+      if (stdout.includes("100%")) {
+        showToast({
+          style: Toast.Style.Success,
+          title: "Download Complete!",
+          message: "The video is in your Downloads folder.",
+        });
+        resolve();
+      }
+      
     });
   });
 }
