@@ -9,25 +9,31 @@ function openUrl(url: string) {
   exec(`open ${url}`);
 }
 
+export default async function main(props: LaunchProps<{ arguments: Arguments }>) {
+  const { URL } = props.arguments;
+  const DLCOMMAND = `cd ~/Downloads && yt-dlp "${URL}"`;
+
+  showToast({
+    style: Toast.Style.Animated,
+    title: "Downloading...",
+  });
+
+  try {
+    await executeCommand(DLCOMMAND);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 async function executeCommand(command: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     exec(command, async (error, stdout, stderr) => {
-      // If yt-dlp is not installed, prompt the user to install it
-      if (error && error.code === 127) {
-        if (
-          await confirmAlert({
-            title: "It looks like you don't have yt-dlp installed. Please install it and try again!",
-          })
-        ) {
-          openUrl("https://github.com/yt-dlp/yt-dlp/wiki/Installation");
-        }
+
+      if (error && error.code === 127) { // If yt-dlp is not installed, prompt the user to install it
+        await confirmAlert({ title: "It looks like you don't have yt-dlp installed. Please install it and try again!",});
+        openUrl("https://github.com/yt-dlp/yt-dlp/wiki/Installation");
         reject();
       }
-
-      showToast({
-        style: Toast.Style.Animated,
-        title: "Downloading...",
-      });
 
       // poll to see if the download is complete
       function checkStatus() {
@@ -62,15 +68,4 @@ async function executeCommand(command: string): Promise<void> {
       const intervalId = setInterval(checkStatus, 1000);
     });
   });
-}
-
-export default async function main(props: LaunchProps<{ arguments: Arguments }>) {
-  const { URL } = props.arguments;
-  const command = `cd ~/Downloads && yt-dlp "${URL}"`;
-
-  try {
-    await executeCommand(command);
-  } catch (error) {
-    console.error(error);
-  }
 }
